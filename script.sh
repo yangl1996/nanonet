@@ -1,11 +1,28 @@
 #!/usr/bin/bash
 
+function id_to_ip
+{
+	sid=$1
+	nid=$2
+	ipc=$(($nid / 256))
+	ipd=$(($nid - $ipc * 256))
+	echo "10.$sid.$ipc.$ipd/32"
+}
+
 function add_virtual_interface
 {
 	sid=$1
 	nid=$2
+
 	# add the network namespace
-	ip netns add "ramjet-s$sid-n$nid"
+	nsname="ramjet-s$sid-n$nid"
+	ip netns add $nsname
+	ip link add eth0 netns $nsname type veth peer name "s${sid}n${nid}"
+
+	# construct the node IP address and give it
+	nodeip=`id_to_ip $sid $nid`
+	echo $nodeip
+
 }
 
 case $1 in
