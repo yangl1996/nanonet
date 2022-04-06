@@ -20,11 +20,16 @@ function add_virtual_interface
 	rootportname="s${sid}n${nid}"
 	ip link add eth0 netns $nsname type veth peer name $rootportname 
 
-	# construct the node IP address and give it
+	# construct the node IP address and assign to the interface in the node
+	# the other end of the veth tunnel does not really need an ip address
 	nodeip=`id_to_ip $sid $nid`
 	ip -n $nsname addr add $nodeip dev eth0
+
+	# bring up both ends of the tunnel
 	ip -n $nsname link set eth0 up
 	ip link set $rootportname up
+
+	# add routes to/from the node
 	ip route add $nodeip dev $rootportname
 	ip -n $nsname route add default dev eth0
 }
