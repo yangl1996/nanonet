@@ -17,12 +17,16 @@ function add_virtual_interface
 	# add the network namespace
 	nsname="ramjet-s$sid-n$nid"
 	ip netns add $nsname
-	ip link add eth0 netns $nsname type veth peer name "s${sid}n${nid}"
+	rootportname="s${sid}n${nid}"
+	ip link add eth0 netns $nsname type veth peer name $rootportname 
 
 	# construct the node IP address and give it
 	nodeip=`id_to_ip $sid $nid`
-	echo $nodeip
-
+	ip -n $nsname addr add $nodeip dev eth0
+	ip -n $nsname link set eth0 up
+	ip link set $rootportname up
+	ip route add $nodeip dev $rootportname
+	ip -n $nsname route add default dev eth0
 }
 
 case $1 in
