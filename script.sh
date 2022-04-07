@@ -47,16 +47,31 @@ function add_virtual_interface
 	echo "server $sid node $nid created at $nodeip"
 }
 
+function rate_limit_ingress
+{
+	sid=$1
+	nid=$2
+	kbps=$3
+
+	nsname="ramjet-s$sid-n$nid"
+	ip netns exec $nsname tc qdisc add dev eth0 handle ffff: ingress
+	ip netns exec $nsname tc filter add dev eth0 parent ffff: protocol ip prio 20 u32 match u32 0 0 police avrate "${kbps}kbit" drop
+
+}
+
 case $1 in
 	add)
 		add_virtual_interface $2 $3 ;;
 	stop)
 		ip -all netns del ;;
+	rl)
+		rate_limit_ingress $2 $3 $4 ;;
 	*)
 		cat <<- EOF
 Helper script to manage RamJet testbed.
 
-    add sid nid		Add a node with server ID sid and node ID nid.
+    add sid nid	        Add a node with server ID sid and node ID nid.
+    rl sid nid c        Limits the ingress rate to server ID sid and node ID nid to c kbps.
     stop		Tear down the network.
 EOF
 	;;
