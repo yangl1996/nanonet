@@ -1,12 +1,21 @@
 #!/usr/bin/bash
 
-function id_to_ip
+function id_to_nodeip
 {
 	sid=$1
-	nid=$2
+	nid=$(($2 * 2))
 	ipc=$(($nid / 256))
 	ipd=$(($nid - $ipc * 256))
-	echo "10.$sid.$ipc.$ipd/32"
+	echo "10.$sid.$ipc.$ipd"
+}
+
+function id_to_hostip
+{
+	sid=$1
+	nid=$(($2 * 2 + 1))
+	ipc=$(($nid / 256))
+	ipd=$(($nid - $ipc * 256))
+	echo "10.$sid.$ipc.$ipd"
 }
 
 function add_virtual_interface
@@ -20,10 +29,12 @@ function add_virtual_interface
 	rootportname="s${sid}n${nid}"
 	ip link add eth0 netns $nsname type veth peer name $rootportname 
 
-	# construct the node IP address and assign to the interface in the node
-	# the other end of the veth tunnel does not really need an ip address
-	nodeip=`id_to_ip $sid $nid`
-	ip -n $nsname addr add $nodeip dev eth0
+	# construct the IP address for the node and the host (physical machine)
+	# we need IP addresses on the host side because the node needs it as the gateway
+	nodeip=`id_to_nodeip $sid $nid`
+	hostip=`id_to_hostip $sid $nid`
+	ip -n $nsname addr add "$nodeip/31" dev eth0
+	ip addr add "$hostip/31" dev $rootportname
 
 	# bring up both ends of the tunnel
 	ip -n $nsname link set eth0 up
@@ -31,7 +42,9 @@ function add_virtual_interface
 
 	# add routes to/from the node
 	ip route add $nodeip dev $rootportname
-	ip -n $nsname route add default dev eth0
+	ip -n $nsname route add 10.0.0.0/8 via $hostip dev eth0
+
+	echo "server $sid node $nid created at $nodeip"
 }
 
 case $1 in
