@@ -54,8 +54,10 @@ function rate_limit_ingress
 	kbps=$3
 
 	nsname="ramjet-s$sid-n$nid"
-	ip netns exec $nsname tc qdisc add dev eth0 handle ffff: ingress
-	ip netns exec $nsname tc filter add dev eth0 parent ffff: protocol ip prio 20 u32 match u32 0 0 police avrate "${kbps}kbit" drop
+	# egress filter at the interface from the node to the global namespace
+	ip netns exec $nsname tc qdisc add dev eth0 root tbf rate "${kbps}kbit" burst 1540 latency 5ms
+	#ip netns exec $nsname tc filter add dev eth0 parent ffff: u32 match u32 0 0 police rate "${kbps}kbit" burst 100k conform-exceed drop/ok
+	# ingress filter at the interface from the global to the node namespace
 
 }
 
