@@ -56,10 +56,26 @@ function rate_limit_ingress
 	nsname="ramjet-s$sid-n$nid"
 	rootportname="s${sid}n${nid}"
 	# egress filter at the interface from the node to the global namespace
-	ip netns exec $nsname tc qdisc add dev eth0 root tbf rate "${kbps}kbit" burst 1540 latency 5ms
+	ip netns exec $nsname tc qdisc add dev eth0 root handle 1: tbf rate "${kbps}kbit" burst 1540 latency 5ms
 	#ip netns exec $nsname tc filter add dev eth0 parent ffff: u32 match u32 0 0 police rate "${kbps}kbit" burst 100k conform-exceed drop/ok
 	# ingress filter at the interface from the global to the node namespace
-	tc qdisc add dev $rootportname root tbf rate "${kbps}kbit" burst 1540 latency 5ms
+	tc qdisc add dev $rootportname root handle 1: tbf rate "${kbps}kbit" burst 1540 latency 5ms
+}
+
+function add_artf_delay
+{
+	src_sid=$1
+	src_nid=$2
+	dst_sid=$3
+	dst_nid=$4
+	ms=$5
+	dstip=`id_to_hostip $dst_sid $dst_nid`
+	nsname="ramjet-s$src_sid-n$src_nid"
+	# add a new class
+	ip netns exec $nsname tc qdisc add dev eth0 parent 1: handle 1:10 netem delay "${ms}ms"
+	#ip netns exec $nsname tc qdisc add dev eth0 parent 1: handle 10: netem delay "${ms}ms"
+	ip netns exec $nsname tc filter add dev eth0 parent 1: u32 match ip dst $dstip flowid 1:10
+
 }
 
 case $1 in
@@ -69,6 +85,8 @@ case $1 in
 		ip -all netns del ;;
 	rl)
 		rate_limit_ingress $2 $3 $4 ;;
+	ad)
+		add_artf_delay $2 $3 $4 $5 $6 ;;
 	*)
 		cat <<- EOF
 Helper script to manage RamJet testbed.
