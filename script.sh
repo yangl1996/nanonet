@@ -21,6 +21,14 @@ function id_to_hostip
 	echo "10.$ipc.$ipd.$nid"
 }
 
+function id_to_hostnet
+{
+	sid=$1
+	ipc=$(($sid / 256))
+	ipd=$(($sid - $ipc * 256))
+	echo "10.$ipc.$ipd.0/24"
+}
+
 function add_virtual_interface
 {
 	sid=$1
@@ -97,14 +105,46 @@ function add_artf_delay
 	ip netns exec $nsname tc qdisc add dev eth0 parent 1:$next_class netem delay "${ms}ms"
 }
 
+function add_route_to
+{
+	our_sid=$1
+	our_ip=$2
+	peer_sid=$3
+	peer_ip=$4
+	our_net=`id_to_hostnet $our_sid`
+	peer_net=`id_to_hostnet $peer_sid`
+
+	# create gre tunnel to peer
+	lsmod | grep gre > /dev/null
+	if [ "$?" -ne 0 ]; then
+		modprobe ip_gre
+	fi
+	ip tunnel add ramjet-gre$peer_sid mode gre remote $peer_ip local $our_ip ttl 255
+	ip link set ramjet-gre$peer_sid up
+	ip addr add `id_to_hostip $our_sid 0` dev ramjet-gre$peer_sid
+	ip route add $peer_net dev ramjet-gre$peer_sid via `id_to_hostip $peer_sid 0`
+}
+
+function stop_net
+{
+	ip -all netns del
+	gre_devices=`ip addr | grep ramjet-gre |  sed -n 's/.*\(ramjet-gre[0-9][0-9]*\).*/\1/p' | sort | uniq`
+	for dev in $gre_devices; do
+		ip link set $dev down
+		ip tunnel del $dev
+	done
+}
+
 case $1 in
 	add)
 		add_virtual_interface $2 $3
 		rate_limit $2 $3 $4 ;;
 	stop)
-		ip -all netns del ;;
+		stop_net ;;
 	delay)
 		add_artf_delay $2 $3 $4 $5 $6 ;;
+	tunnel)
+		add_route_to $2 $3 $4 $5  ;;
 	*)
 		cat <<- EOF
 Helper script to manage RamJet testbed.
@@ -115,6 +155,9 @@ Helper script to manage RamJet testbed.
     delay src_sid src_nid dst_sid dst_nid d
                         Inject artificial delay of d ms from src to dst, identified by
                         their respective sid and nid.
+    tunnel self_sid self_ip peer_sid peer_ip
+                        Link this server with server ID self_sid and public IP address
+                        self_ip to a peer server with peer_sid and peer_ip.
     stop		Tear down the network.
 EOF
 	;;
