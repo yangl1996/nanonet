@@ -7,18 +7,18 @@ function id_to_nodeip
 {
 	sid=$1
 	nid=$(($2 * 2))
-	ipc=$(($nid / 256))
-	ipd=$(($nid - $ipc * 256))
-	echo "10.$sid.$ipc.$ipd"
+	ipc=$(($sid / 256))
+	ipd=$(($sid - $ipc * 256))
+	echo "10.$ipc.$ipd.$nid"
 }
 
 function id_to_hostip
 {
 	sid=$1
 	nid=$(($2 * 2 + 1))
-	ipc=$(($nid / 256))
-	ipd=$(($nid - $ipc * 256))
-	echo "10.$sid.$ipc.$ipd"
+	ipc=$(($sid / 256))
+	ipd=$(($sid - $ipc * 256))
+	echo "10.$ipc.$ipd.$nid"
 }
 
 function add_virtual_interface
