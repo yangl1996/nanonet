@@ -57,8 +57,10 @@ function add_virtual_interface
 #                                     -> 1:3 (netem for peer 1)
 #                                     -> 1:4 (netem for peer 2)
 #                                     -> ... 
-# classes 1:2, 1:3, ... each has an assigned rate of 1kbps and a ceiling
-# of 10gbps (i.e., practically unlimited), so that they behave like fair queuing
+# Class 1:1 is an HTB with an assigned rate.
+# Classes 1:2, 1:3, ... each has an assigned rate of 1kbps and a ceiling
+# of 10gbps (i.e., practically unlimited), so that they behave like fair queuing.
+# Classes 1:3, ... each has a netem qdisc attached to simulate delay.
 
 function rate_limit
 {
