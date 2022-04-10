@@ -133,6 +133,7 @@ function stop_net
 		ip link set $dev down
 		ip tunnel del $dev
 	done
+	modprobe -r ip_gre
 }
 
 case $1 in
