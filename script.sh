@@ -110,8 +110,11 @@ case $1 in
 Helper script to manage RamJet testbed.
 
     add sid nid c       Add a node with server ID sid, node ID nid, and c kbps of bw.
+                        sid must be an integer between 1 to 65535. nid must be an integer
+                        between 1 and 127.
     delay src_sid src_nid dst_sid dst_nid d
-                        Inject artificial delay of d ms from src to dst.
+                        Inject artificial delay of d ms from src to dst, identified by
+                        their respective sid and nid.
     stop		Tear down the network.
 EOF
 	;;
