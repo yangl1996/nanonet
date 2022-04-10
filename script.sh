@@ -122,7 +122,7 @@ function add_route_to
 	ip tunnel add ramjet-gre$peer_sid mode gre remote $peer_ip local $our_ip ttl 255
 	ip link set ramjet-gre$peer_sid up
 	ip addr add `id_to_hostip $our_sid 0` dev ramjet-gre$peer_sid
-	ip route add $peer_net dev ramjet-gre$peer_sid via `id_to_hostip $peer_sid 0`
+	ip route add $peer_net dev ramjet-gre$peer_sid
 }
 
 function stop_net
