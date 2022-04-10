@@ -44,6 +44,9 @@ function add_virtual_interface
 	ip route add $nodeip dev $rootportname
 	ip -n $nsname route add 10.0.0.0/8 via $hostip dev eth0
 
+	# add htb for us to classify traffic into later
+	ip netns exec $nsname tc qdisc add dev eth0 handle 1: root htb default 1
+	tc qdisc add dev $rootportname handle 1: root htb default 1
 	echo "server $sid node $nid created at $nodeip"
 }
 
@@ -56,10 +59,9 @@ function rate_limit_ingress
 	nsname="ramjet-s$sid-n$nid"
 	rootportname="s${sid}n${nid}"
 	# egress filter at the interface from the node to the global namespace
-	ip netns exec $nsname tc qdisc add dev eth0 root handle 1: tbf rate "${kbps}kbit" burst 1540 latency 5ms
-	#ip netns exec $nsname tc filter add dev eth0 parent ffff: u32 match u32 0 0 police rate "${kbps}kbit" burst 100k conform-exceed drop/ok
+	ip netns exec $nsname tc class add dev eth0 parent 1: classid 1:1 htb rate "${kbps}kbit" burst 1540
 	# ingress filter at the interface from the global to the node namespace
-	tc qdisc add dev $rootportname root handle 1: tbf rate "${kbps}kbit" burst 1540 latency 5ms
+	tc class add dev $rootportname parent 1: classid 1:1 htb rate "${kbps}kbit" burst 1540
 }
 
 function add_artf_delay
