@@ -21,14 +21,6 @@ function id_to_hostip
 	echo "10.$ipc.$ipd.$nid"
 }
 
-function id_to_hostnet
-{
-	sid=$1
-	ipc=$(($sid / 256))
-	ipd=$(($sid - $ipc * 256))
-	echo "10.$ipc.$ipd.0/24"
-}
-
 function add_virtual_interface
 {
 	sid=$1
@@ -114,8 +106,6 @@ function add_route_to
 	our_ip=$2
 	peer_sid=$3
 	peer_ip=$4
-	our_net=`id_to_hostnet $our_sid`
-	peer_net=`id_to_hostnet $peer_sid`
 
 	# create gre tunnel to peer
 	lsmod | grep gre > /dev/null
@@ -125,7 +115,6 @@ function add_route_to
 	ip tunnel add ramjet-gre$peer_sid mode gre remote $peer_ip local $our_ip ttl 255
 	ip link set ramjet-gre$peer_sid up
 	ip addr add `id_to_hostip $our_sid 0`/24 dev ramjet-gre$peer_sid peer `id_to_hostip $peer_sid 0`/24
-	#ip route add $peer_net dev ramjet-gre$peer_sid #via `id_to_hostip $peer_sid 0`
 }
 
 function stop_net
