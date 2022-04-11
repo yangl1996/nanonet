@@ -179,13 +179,30 @@ case $1 in
 		cat <<- EOF
 Helper script to manage RamJet testbed.
 
+    add NODE BW                  Add a node with the identifier NODE and bandwidth BW. 
+    delay NODE NODE DL           Inject artificial delay of DL from the first NODE to the
+                                 second NODE.
+    { cut | uncut } NODE NODE    Cut or uncut the link from the first NODE to the second
+                                 NODE.
+    tunnel SERVER SERVER         Bridge the local server (identified by the first SERVER)
+                                 to a peer server (identified by the second SERVER).
+    stop                         Tear down the network.
+    
+    SERVER := SID IP
+    NODE := SID NID
+    IP := ipv4 address
+    SID := an integer between 1 to 65535
+    NID := an integer between 1 to 127
+    BW := integer in kbps
+    DL := integer in ms
+
     add sid nid c       Add a node with server ID sid, node ID nid, and c kbps of bw.
                         sid must be an integer between 1 to 65535. nid must be an integer
                         between 1 and 127.
     delay src_sid src_nid dst_sid dst_nid d
                         Inject artificial delay of d ms from src to dst, identified by
                         their respective sid and nid.
-    {cut | uncut} src_sid src_nid dst_sid dst_nid
+    { cut | uncut } src_sid src_nid dst_sid dst_nid
                         Cut or uncut the link from src to dst, identified by their
                         respective sid and nid.
     tunnel self_sid self_ip peer_sid peer_ip
