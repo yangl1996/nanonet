@@ -33,6 +33,9 @@ function add_virtual_interface
 {
 	sid=$1
 	nid=$2
+	
+	# enable packet forwarding
+	sysctl -w net.ipv4.ip_forward=1 > /dev/null
 
 	# add the network namespace
 	nsname="ramjet-s$sid-n$nid"
