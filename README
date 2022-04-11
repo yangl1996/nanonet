@@ -1,3 +1,6 @@
+Nanonet is a simple shell script that emulates a peer-to-peer network on one or many
+physical servers using Linux qdisc and GRE tunnels.
+
 The testbed should consist of one or multiple "servers" with IP connectivity to each
 other. Each server should be assigned a globally-unique server ID from 1 to 65535.
 On each server, there could be one or multiple "nodes". Each node should be assigned
