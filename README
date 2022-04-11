@@ -1,0 +1,10 @@
+The testbed should consist of one or multiple "servers" with IP connectivity to each
+other. Each server should be assigned a globally-unique server ID from 1 to 65535.
+On each server, there could be one or multiple "nodes". Each node should be assigned
+a node ID from 1 to 127 that is unique on the server where the node resides.
+
+Each server is assigned a /24 network determined by its server ID, and each node is
+assigned a /31 network which is a subnet of the /24 network of the containing server.
+The IP address of a node is fully-determined by the server ID of the containing
+server, and the node ID. Servers maintain GRE tunnels to each other so that they can
+route LAN packets across the public internet.
