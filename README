@@ -11,3 +11,7 @@ assigned a /31 network which is a subnet of the /24 network of the containing se
 The IP address of a node is fully-determined by the server ID of the containing
 server, and the node ID. Servers maintain GRE tunnels to each other so that they can
 route LAN packets across the public internet.
+
+The kenrel must have IPv4 packet forwarding turned on. Run
+    sysctl -w net.ipv4.ip_forward=1
+to turn it on.
