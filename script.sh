@@ -99,7 +99,7 @@ function add_artf_delay
 	dstip=`id_to_nodeip $dst_sid $dst_nid`
 	nsname="ramjet-s$src_sid-n$src_nid"
 	# figure out the next available class id
-	largest_class=`ip netns exec ramjet-s1-n1 tc class show dev eth0 | grep 'htb 1:' | sed -n 's/.*htb 1:\([0-9][0-9]*\) .*/\1/p' | sort -r | head -n1`
+	largest_class=`ip netns exec $nsname tc class show dev eth0 | grep 'htb 1:' | sed -n 's/.*htb 1:\([0-9][0-9]*\) .*/\1/p' | sort -r | head -n1`
 	next_class=$(($largest_class + 1))
 
 	# add a new class
