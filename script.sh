@@ -12,6 +12,15 @@ function id_to_nodeip
 	echo "10.$ipc.$ipd.$nid"
 }
 
+function id_to_hexnodeip
+{
+	sid=$1
+	nid=$(($2 * 2))
+	ipc=$(($sid / 256))
+	ipd=$(($sid - $ipc * 256))
+	printf "0a%02x%02x%02x" $ipc $ipd $nid
+}
+
 function id_to_hostip
 {
 	sid=$1
@@ -128,6 +137,30 @@ function stop_net
 	modprobe -r ip_gre
 }
 
+function set_loss
+{
+	src_sid=$1
+	src_nid=$2
+	dst_sid=$3
+	dst_nid=$4
+	targetloss=$5
+	nsname="ramjet-s$src_sid-n$src_nid"
+
+	# find the qdisc we configured for this node
+	hexip=`id_to_hexnodeip $dst_sid $dst_nid`
+	filterline=`ip netns exec $nsname tc filter show dev eth0 | grep -B1 $hexip`
+	# if there is no such qdisc, report an error
+	if [ "$?" -ne 0 ]; then
+		echo "error: no delay set from ($src_sid, $src_nid) to ($dst_sid, $dst_nid)"
+		exit 1
+	fi
+	classid=`echo $filterline | sed -n 's/.*flowid \([0-9]*:[0-9]*\).*/\1/p'`
+	classline=`ip netns exec $nsname tc class show dev eth0 classid $classid`
+	qdiscline=`ip netns exec $nsname tc qdisc show dev eth0 parent $classid`
+	currentdelay=`echo $qdiscline | sed -n 's/.*delay \([0-9]*[a-z]*\).*/\1/p'`
+	ip netns exec $nsname tc qdisc change dev eth0 parent $classid netem delay $currentdelay loss $targetloss
+}
+
 case $1 in
 	add)
 		add_virtual_interface $2 $3
@@ -138,6 +171,10 @@ case $1 in
 		add_artf_delay $2 $3 $4 $5 $6 ;;
 	tunnel)
 		add_route_to $2 $3 $4 $5  ;;
+	cut)
+		set_loss $2 $3 $4 $5 100 ;;
+	uncut)
+		set_loss $2 $3 $4 $5 0 ;;
 	*)
 		cat <<- EOF
 Helper script to manage RamJet testbed.
@@ -148,6 +185,9 @@ Helper script to manage RamJet testbed.
     delay src_sid src_nid dst_sid dst_nid d
                         Inject artificial delay of d ms from src to dst, identified by
                         their respective sid and nid.
+    {cut | uncut} src_sid src_nid dst_sid dst_nid
+                        Cut or uncut the link from src to dst, identified by their
+                        respective sid and nid.
     tunnel self_sid self_ip peer_sid peer_ip
                         Link this server with server ID self_sid and public IP address
                         self_ip to a peer server with peer_sid and peer_ip.
