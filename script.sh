@@ -198,20 +198,6 @@ Helper script to manage RamJet testbed.
     NID := an integer between 1 to 127
     BW := integer in kbps
     DL := integer in ms
-
-    add sid nid c       Add a node with server ID sid, node ID nid, and c kbps of bw.
-                        sid must be an integer between 1 to 65535. nid must be an integer
-                        between 1 and 127.
-    delay src_sid src_nid dst_sid dst_nid d
-                        Inject artificial delay of d ms from src to dst, identified by
-                        their respective sid and nid.
-    { cut | uncut } src_sid src_nid dst_sid dst_nid
-                        Cut or uncut the link from src to dst, identified by their
-                        respective sid and nid.
-    tunnel self_sid self_ip peer_sid peer_ip
-                        Link this server with server ID self_sid and public IP address
-                        self_ip to a peer server with peer_sid and peer_ip.
-    stop		Tear down the network.
 EOF
 	;;
 esac
