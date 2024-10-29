@@ -37,6 +37,7 @@ function add_virtual_interface
 	
 	# enable packet forwarding
 	sysctl -w net.ipv4.ip_forward=1 > /dev/null
+	# iptables -t nat -A POSTROUTING -o eno1 -j MASQUERADE
 
 	# add the network namespace
 	nsname="ramjet-s$sid-n$nid"
@@ -58,6 +59,7 @@ function add_virtual_interface
 	# add routes to/from the node
 	ip route add $nodeip dev $rootportname
 	ip -n $nsname route add 10.0.0.0/8 via $hostip dev veth0
+	ip -n $nsname route add 0.0.0.0/0 via $hostip dev veth0
 
 	# add htb for us to classify traffic into later
 	ip netns exec $nsname tc qdisc add dev veth0 handle 1: root htb default 2
